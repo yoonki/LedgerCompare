@@ -971,6 +971,14 @@ else:  # page == "🔍 상세 분석"
                 display_df["파일1_금액"] = display_df["파일1_금액"].apply(format_currency)
                 display_df["파일2_금액"] = display_df["파일2_금액"].apply(format_currency)
 
+                # 컬럼명을 입력된 관점명으로 변경
+                display_df = display_df.rename(columns={
+                    "파일1_적요": f"{perspective1}_적요",
+                    "파일1_금액": f"{perspective1}_금액",
+                    "파일2_적요": f"{perspective2}_적요",
+                    "파일2_금액": f"{perspective2}_금액"
+                })
+
                 # 색상 강조 적용
                 def style_detail_rows(row):
                     status = row["상태"]
@@ -990,8 +998,14 @@ else:  # page == "🔍 상세 분석"
                 st.subheader("💾 다운로드")
 
                 csv_data = detail_df.copy()
-                csv_data["파일1_금액"] = csv_data["파일1_금액"].apply(format_currency)
-                csv_data["파일2_금액"] = csv_data["파일2_금액"].apply(format_currency)
+                csv_data = csv_data.rename(columns={
+                    "파일1_적요": f"{perspective1}_적요",
+                    "파일1_금액": f"{perspective1}_금액",
+                    "파일2_적요": f"{perspective2}_적요",
+                    "파일2_금액": f"{perspective2}_금액"
+                })
+                csv_data[f"{perspective1}_금액"] = csv_data[f"{perspective1}_금액"].apply(format_currency)
+                csv_data[f"{perspective2}_금액"] = csv_data[f"{perspective2}_금액"].apply(format_currency)
 
                 csv_buffer = csv_data.to_csv(index=False, encoding="utf-8-sig")
 
