@@ -337,6 +337,18 @@ if "data_loaded" not in st.session_state:
     st.session_state.perspective1 = None  # 파일1의 관점
     st.session_state.perspective2 = None  # 파일2의 관점
 
+# 상세 분석용 세션 상태 초기화
+if "selected_date" not in st.session_state:
+    st.session_state.selected_date = None
+    st.session_state.compare_type = None
+    st.session_state.match_filter = None
+
+# 필터 변경 감지 함수
+def on_filter_change():
+    """필터값이 변경되면 자동으로 비교를 실행"""
+    # 세션 상태에 현재 필터값 저장
+    st.session_state.filter_changed = True
+
 
 # ============================================================================
 # 메인 제목
@@ -891,49 +903,90 @@ else:  # page == "🔍 상세 분석"
     st.subheader("🔍 상세 분석 필터")
 
     # 거래 날짜 선택, 거래 유형 선택, 일치 여부 필터를 한 행에 배치
-    col_date, col_type, col_filter, col_button = st.columns([2, 3, 2, 1.5])
+    col_date, col_type, col_filter = st.columns([2, 3, 2])
 
     # 1. 거래 날짜 선택
     available_dates = sorted(df1["date"].unique())
     date_options = [d.strftime("%Y/%m/%d") for d in available_dates]
 
+    # 초기값 설정
+    initial_date_idx = 0
+    if st.session_state.selected_date is not None:
+        try:
+            initial_date_str = st.session_state.selected_date.strftime("%Y/%m/%d")
+            initial_date_idx = date_options.index(initial_date_str)
+        except:
+            initial_date_idx = 0
+
     with col_date:
         selected_date_str = st.selectbox(
             "📅 거래 날짜 선택",
             options=date_options,
+            index=initial_date_idx,
             help="비교할 거래 날짜를 선택하세요",
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            key="filter_date",
+            on_change=on_filter_change
         )
 
     selected_date = pd.to_datetime(selected_date_str)
 
     # 2. 거래 유형 선택
+    compare_type_options = [
+        f"{perspective1}_판매 vs {perspective2}_구매",
+        f"{perspective1}_수금 vs {perspective2}_지급",
+        f"{perspective2}_판매 vs {perspective1}_구매",
+        f"{perspective2}_수금 vs {perspective1}_지급"
+    ]
+
+    initial_type_idx = 0
+    if st.session_state.compare_type is not None:
+        try:
+            initial_type_idx = compare_type_options.index(st.session_state.compare_type)
+        except:
+            initial_type_idx = 0
+
     with col_type:
         compare_type = st.selectbox(
             "📋 거래 유형 선택",
-            options=[
-                f"{perspective1}_판매 vs {perspective2}_구매",
-                f"{perspective1}_수금 vs {perspective2}_지급",
-                f"{perspective2}_판매 vs {perspective1}_구매",
-                f"{perspective2}_수금 vs {perspective1}_지급"
-            ],
+            options=compare_type_options,
+            index=initial_type_idx,
             help="비교할 거래 유형을 선택하세요",
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            key="filter_type",
+            on_change=on_filter_change
         )
 
     # 3. 일치 여부 필터
+    filter_options = ["모두", "일치", "불일치"]
+
+    initial_filter_idx = 0
+    if st.session_state.match_filter is not None:
+        try:
+            initial_filter_idx = filter_options.index(st.session_state.match_filter)
+        except:
+            initial_filter_idx = 0
+
     with col_filter:
         match_filter = st.selectbox(
             "🔍 일치 여부 필터",
-            options=["모두", "일치", "불일치"],
+            options=filter_options,
+            index=initial_filter_idx,
             help="일치 여부로 거래를 필터링하세요",
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            key="filter_match",
+            on_change=on_filter_change
         )
 
-    # 비교 실행 버튼
-    with col_button:
-        st.write("")  # 패딩
-        if st.button("▶️ 비교 실행", use_container_width=True):
+    # 필터값이 변경되면 자동으로 세션 상태 업데이트
+    if st.session_state.get("filter_changed", False):
+        st.session_state.selected_date = selected_date
+        st.session_state.compare_type = compare_type
+        st.session_state.match_filter = match_filter
+        st.session_state.filter_changed = False
+    else:
+        # 초기 로드 시에만 세션 상태 설정
+        if st.session_state.selected_date is None:
             st.session_state.selected_date = selected_date
             st.session_state.compare_type = compare_type
             st.session_state.match_filter = match_filter
@@ -952,7 +1005,7 @@ else:  # page == "🔍 상세 분석"
     # ========================================================================
     with analysis_tab1:
         # 상세 비교 데이터 생성
-        if hasattr(st.session_state, 'selected_date'):
+        if st.session_state.selected_date is not None:
             selected_date = st.session_state.selected_date
             compare_type = st.session_state.compare_type
             match_filter = st.session_state.match_filter
@@ -1019,7 +1072,7 @@ else:  # page == "🔍 상세 분석"
             else:
                 st.warning("⚠️ 선택한 조건에 맞는 거래가 없습니다.")
         else:
-            st.info("💡 사이드바에서 필터를 설정하고 '비교 실행' 버튼을 클릭하세요.")
+            st.info("💡 필터를 설정하면 자동으로 비교 결과가 표시됩니다.")
 
     # ========================================================================
     # 탭2: 파일1(관점1) 관점 상세 보기
@@ -1027,7 +1080,7 @@ else:  # page == "🔍 상세 분석"
     with analysis_tab2:
         st.subheader(f"{perspective1} 거래 기록")
 
-        if hasattr(st.session_state, 'selected_date'):
+        if st.session_state.selected_date is not None:
             selected_date = st.session_state.selected_date
 
             # 해당 날짜의 파일1 데이터만 필터링
@@ -1078,7 +1131,7 @@ else:  # page == "🔍 상세 분석"
             else:
                 st.warning(f"⚠️ {selected_date.strftime('%Y/%m/%d')}에 {perspective1}의 거래가 없습니다.")
         else:
-            st.info("💡 사이드바에서 거래 날짜를 선택하고 '비교 실행' 버튼을 클릭하세요.")
+            st.info("💡 필터를 설정하면 자동으로 거래 기록이 표시됩니다.")
 
     # ========================================================================
     # 탭3: 파일2(관점2) 관점 상세 보기
@@ -1086,7 +1139,7 @@ else:  # page == "🔍 상세 분석"
     with analysis_tab3:
         st.subheader(f"{perspective2} 거래 기록")
 
-        if hasattr(st.session_state, 'selected_date'):
+        if st.session_state.selected_date is not None:
             selected_date = st.session_state.selected_date
 
             # 해당 날짜의 파일2 데이터만 필터링
@@ -1137,4 +1190,4 @@ else:  # page == "🔍 상세 분석"
             else:
                 st.warning(f"⚠️ {selected_date.strftime('%Y/%m/%d')}에 {perspective2}의 거래가 없습니다.")
         else:
-            st.info("💡 사이드바에서 거래 날짜를 선택하고 '비교 실행' 버튼을 클릭하세요.")
+            st.info("💡 필터를 설정하면 자동으로 거래 기록이 표시됩니다.")
