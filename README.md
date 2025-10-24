@@ -262,16 +262,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## ✅ 향후 계획 (Roadmap)
-
-- [ ] 다국어 지원 (영어, 중국어 등)
-- [ ] 월별/분기별 자동 비교 기능
-- [ ] 더 많은 원장 파일 비교 (2개 이상)
-- [ ] 이상 거래 자동 탐지 AI 기능
-- [ ] 데이터베이스 연동
-- [ ] 클라우드 저장소 지원
-
----
 
 **Last Updated**: 2024년 10월  
 **Version**: 1.0.0
