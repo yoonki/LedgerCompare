@@ -672,43 +672,6 @@ if page == "📊 대시보드":
                             else:
                                 st.info(f"해당 날짜 {perspective2} 거래 없음")
 
-        # 탭1의 불일치 거래 분석 요약
-        st.divider()
-        st.subheader("📊 불일치 거래 분석 요약")
-
-        mismatch_df_tab1 = comparison_df[comparison_df["is_match"] == False]
-
-        if len(mismatch_df_tab1) > 0:
-            mismatch_count = len(mismatch_df_tab1)
-            mismatch_differences = mismatch_df_tab1["difference"].abs()
-            avg_difference = mismatch_differences.mean()
-            max_difference = mismatch_differences.max()
-            min_difference = mismatch_differences.min()
-
-            max_date = mismatch_df_tab1[mismatch_df_tab1["difference"].abs() == max_difference].iloc[0]["date"].strftime("%Y/%m/%d")
-            min_date = mismatch_df_tab1[mismatch_df_tab1["difference"].abs() == min_difference].iloc[0]["date"].strftime("%Y/%m/%d")
-
-            # 2x2 레이아웃
-            col1, col2 = st.columns(2)
-
-            with col1:
-                st.metric("불일치 거래일", f"{mismatch_count}일")
-
-            with col2:
-                st.metric("평균 편차", format_currency(avg_difference))
-
-            col3, col4 = st.columns(2)
-
-            with col3:
-                st.metric("최대 편차", format_currency(max_difference))
-                st.caption(f"📅 {max_date}")
-
-            with col4:
-                st.metric("최소 편차", format_currency(min_difference))
-                st.caption(f"📅 {min_date}")
-        else:
-            st.success("✅ 모든 거래가 일치합니다!")
-
         # 탭1 CSV 다운로드
         st.divider()
         st.subheader("💾 다운로드")
@@ -828,43 +791,6 @@ if page == "📊 대시보드":
                                 st.caption(f"**합계** - 판매: {format_currency(df1_date['sale_amount'].sum())} | 수금: {format_currency(df1_date['collection_amount'].sum())} | 구매: {format_currency(df1_date['purchase_amount'].sum())} | 지급: {format_currency(df1_date['payment_amount'].sum())}")
                             else:
                                 st.info(f"해당 날짜 {perspective1} 거래 없음")
-
-        # 탭2의 불일치 거래 분석 요약
-        st.divider()
-        st.subheader("📊 불일치 거래 분석 요약")
-
-        mismatch_df_tab2 = comparison_reverse[comparison_reverse["is_match"] == False]
-
-        if len(mismatch_df_tab2) > 0:
-            mismatch_count = len(mismatch_df_tab2)
-            mismatch_differences = mismatch_df_tab2["difference"].abs()
-            avg_difference = mismatch_differences.mean()
-            max_difference = mismatch_differences.max()
-            min_difference = mismatch_differences.min()
-
-            max_date = mismatch_df_tab2[mismatch_df_tab2["difference"].abs() == max_difference].iloc[0]["date"].strftime("%Y/%m/%d")
-            min_date = mismatch_df_tab2[mismatch_df_tab2["difference"].abs() == min_difference].iloc[0]["date"].strftime("%Y/%m/%d")
-
-            # 2x2 레이아웃
-            col1, col2 = st.columns(2)
-
-            with col1:
-                st.metric("불일치 거래일", f"{mismatch_count}일")
-
-            with col2:
-                st.metric("평균 편차", format_currency(avg_difference))
-
-            col3, col4 = st.columns(2)
-
-            with col3:
-                st.metric("최대 편차", format_currency(max_difference))
-                st.caption(f"📅 {max_date}")
-
-            with col4:
-                st.metric("최소 편차", format_currency(min_difference))
-                st.caption(f"📅 {min_date}")
-        else:
-            st.success("✅ 모든 거래가 일치합니다!")
 
         # 탭2 CSV 다운로드
         st.divider()
